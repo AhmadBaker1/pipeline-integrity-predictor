@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    h1 { color: #2c3e50; }
+    p { margin-bottom: 0.75rem; }
+    .label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Pipeline Integrity Risk Report</h1>
+  <p><span class="label">Timestamp:</span> {{ timestamp }}</p>
+  <p><span class="label">Pressure:</span> {{ pressure }} psi</p>
+  <p><span class="label">Flow Rate:</span> {{ flow_rate }} m³/s</p>
+  <p><span class="label">Temperature:</span> {{ temperature }} °C</p>
+  <p><span class="label">Vibration:</span> {{ vibration }} g</p>
+  <p><span class="label">Risk Score:</span> {{ risk_score }}</p>
+  <p><span class="label">Detected Issue:</span> {{ detected_issue }}</p>
+  <hr>
+  <p><span class="label">Summary:</span> This pipeline segment may require inspection due to elevated risk. Please review recommendations based on severity.</p>
+</body>
+</html>
