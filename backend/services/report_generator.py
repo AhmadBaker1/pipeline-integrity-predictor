@@ -1,17 +1,34 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import datetime
+import joblib
+import numpy as np
 import os
 import uuid
 from models.sensor_data import SensorData
 import random
 
+
+# Load the trained models and scaler
+reg_model = joblib.load("risk_score_model.joblib")
+clf_model = joblib.load("issue_classifier.joblib")
+scaler = joblib.load("scaler.joblib")
+label_encoder = joblib.load("label_encoder.joblib")
+
 def generate_pdf_report(data: SensorData):
-    risk_score = round(random.uniform(20, 95), 2)
-    issues = ["Corrosion Risk", "Fatigue Risk", "Leak Risk", "Overpressure Risk"]
-    detected_issue = random.choice(issues)
+    X = np.array([[data.pressure, data.flow_rate, data.temperature, data.vibration]])
+    X_scaled = scaler.transform(X)
+
+    # Predicting the risk score (regression model)
+    risk_score = float(reg_model.predict(X_scaled)[0])
+
+    # Predicting the issue (classification model)
+    issue_encoded = clf_model.predict(X_scaled)[0]
+    issue_label = label_encoder.inverse_transform([issue_encoded])[0]
+
+    # Now determine the severity of the issue
     severity = "High" if risk_score > 75 else "Medium" if risk_score > 50 else "Low"
-    full_issue = f"{detected_issue} – {severity}"
+    full_issue = f"{issue_label} - {severity}"
 
     filename = f"report_{uuid.uuid4().hex[:8]}.pdf"
     filepath = os.path.join("reports", filename)
