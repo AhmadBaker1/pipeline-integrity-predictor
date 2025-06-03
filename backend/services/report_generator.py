@@ -1,12 +1,14 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import datetime
+from services.genai_summary import generate_genai_summary
 import joblib
 import numpy as np
 import os
 import uuid
 from models.sensor_data import SensorData
 import random
+import textwrap
 
 
 # Load the trained models and scaler
@@ -14,6 +16,7 @@ reg_model = joblib.load("risk_score_model.joblib")
 clf_model = joblib.load("issue_classifier.joblib")
 scaler = joblib.load("scaler.joblib")
 label_encoder = joblib.load("label_encoder.joblib")
+
 
 def generate_pdf_report(data: SensorData):
     X = np.array([[data.pressure, data.flow_rate, data.temperature, data.vibration]])
@@ -29,6 +32,9 @@ def generate_pdf_report(data: SensorData):
     # Now determine the severity of the issue
     severity = "High" if risk_score > 75 else "Medium" if risk_score > 50 else "Low"
     full_issue = f"{issue_label} - {severity}"
+
+    # Generate a summary using GenAI
+    summary = generate_genai_summary(data, risk_score, issue_label, severity)
 
     filename = f"report_{uuid.uuid4().hex[:8]}.pdf"
     filepath = os.path.join("reports", filename)
@@ -47,7 +53,13 @@ def generate_pdf_report(data: SensorData):
     text.textLine(f"Risk Score: {risk_score}")
     text.textLine(f"Detected Issue: {full_issue}")
     text.textLine("")
-    text.textLine("Summary: Pipeline integrity is at risk. Recommended inspection required.")
+
+    text.textLine("Summary:")
+    # Wrap the summary text to fit within the PDF width
+    wrapped_lines = textwrap.wrap(summary, width=95)
+    for line in wrapped_lines:
+        text.textLine(line)
+
     text.textLine("Please review maintenance suggestions based on severity.")
 
     c.drawText(text)
